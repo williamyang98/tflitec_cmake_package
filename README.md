@@ -73,7 +73,6 @@ project(main)
 set(tflitec_DIR ${CMAKE_SOURCE_DIR}/tflite_c)
 find_package(tflitec CONFIG REQUIRED)
 
-set(SRC_FILES main.c)
 add_executable(main main.c)
 target_link_libraries(main PRIVATE tflitec) 
 
