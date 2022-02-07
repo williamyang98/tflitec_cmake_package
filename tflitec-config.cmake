@@ -13,15 +13,23 @@ get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 # create our library
 add_library(tflitec SHARED IMPORTED GLOBAL)  
-set_target_properties(tflitec PROPERTIES 
-    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-    IMPORTED_IMPLIB_RELEASE     "${_IMPORT_PREFIX}/lib/tensorflowlite_c.lib"
-    IMPORTED_LOCATION_RELEASE   "${_IMPORT_PREFIX}/bin/tensorflowlite_c.dll"
-    IMPORTED_IMPLIB_DEBUG       "${_IMPORT_PREFIX}/lib/tensorflowlite_c.lib"
-    IMPORTED_LOCATION_DEBUG     "${_IMPORT_PREFIX}/bin/tensorflowlite_c.dll"
-    )
 
-set_property(TARGET tflitec APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE DEBUG)
+# detect if x86 or x64
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set_target_properties(tflitec PROPERTIES 
+        INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+        IMPORTED_IMPLIB_RELEASE     "${_IMPORT_PREFIX}/lib/x64/Release/tensorflowlite_c.lib"
+        IMPORTED_LOCATION_RELEASE   "${_IMPORT_PREFIX}/bin/x64/Release/tensorflowlite_c.dll")
+    message(STATUS "Using x64 build of tflitec")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set_target_properties(tflitec PROPERTIES 
+        INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+        IMPORTED_IMPLIB_RELEASE     "${_IMPORT_PREFIX}/lib/x86/Release/tensorflowlite_c.lib"
+        IMPORTED_LOCATION_RELEASE   "${_IMPORT_PREFIX}/bin/x86/Release/tensorflowlite_c.dll")
+    message(STATUS "Using x86 build of tflitec")
+endif()
+
+set_property(TARGET tflitec APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 
 # corresponding pop on policy scope
 set(CMAKE_IMPORT_FILE_VERSION)
