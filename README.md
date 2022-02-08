@@ -7,8 +7,8 @@ Build targets are:
 
 # Build environment
 Built using 2019 Visual Studio
-msbuild = 16.10.0+4242f381a
-cl = 19.29.30037 (for x86 and x64)
+- msbuild = 16.10.0+4242f381a
+- cl = 19.29.30037 (for x86 and x64)
 # Instructions
 1. Follow steps here: https://www.tensorflow.org/lite/guide/build_cmake
 2. Fix a few msvc incompatibilities with existing tflite (c++ api) code
