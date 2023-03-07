@@ -9,7 +9,11 @@ target_link_libraries(main PRIVATE tflitec)
 
 # vcpkg.cmake has internal stuff that autogenerates this
 # we have to do this manually
-add_custom_command(TARGET main 
-    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy 
-    ${tflitec_DIR}/bin/tensorflowlite_c.dll
-    $<TARGET_FILE_DIR:main>)
+add_custom_command(
+    TARGET main 
+    POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy 
+    $<TARGET_RUNTIME_DLLS:main> 
+    $<TARGET_FILE_DIR:main>
+    COMMAND_EXPAND_LISTS
+)

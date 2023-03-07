@@ -2,75 +2,99 @@
 #include "tensorflow/lite/c/c_api.h"
 #include "tensorflow/lite/c/common.h"
 
-void PrintTfLiteModelSummary(TfLiteInterpreter *interpreter);
-void PrintTfLiteTensorSummary(const TfLiteTensor *tensor);
+void PrintTfLiteModelSummary(TfLiteInterpreter* interpreter);
+void PrintTfLiteTensorSummary(const TfLiteTensor* tensor);
 
-int main(int argc, char **argv) {
+// Refer to tensorflow/lite/c_api_types.h for each TfLiteType
+const size_t TfLiteTypeSizeTable[17] = {
+    0, // kTfLiteNoType = 0,
+    4, // kTfLiteFloat32 = 1,
+    4, // kTfLiteInt32 = 2,
+    1, // kTfLiteUInt8 = 3,
+    8, // kTfLiteInt64 = 4,
+    1, // kTfLiteString = 5,            TODO: What is the format of variable length byte string? 
+    1, // kTfLiteBool = 6,
+    2, // kTfLiteInt16 = 7,
+    8, // kTfLiteComplex64 = 8,
+    1, // kTfLiteInt8 = 9,
+    2, // kTfLiteFloat16 = 10,
+    8, // kTfLiteFloat64 = 11,
+    16,// kTfLiteComplex128 = 12,
+    8, // kTfLiteUInt64 = 13,
+    1, // kTfLiteResource = 14,         TODO: What is the format of this? 
+    1, // kTfLiteVariant = 15,          TODO: What is this type at runtime?
+    4, // kTfLiteUInt32 = 16,
+};
+
+int main(int argc, char** argv) {
     if (argc <= 1) {
-        printf("Insert directory of tflite model\n");
+        printf("Usage: main [model_filepath]\n");
         return 1;
     }
 
     // Create the model and interpreter options.
-    const char *model_path = argv[1];
+    const char* model_path = argv[1];
+    const int total_threads = 1;
     TfLiteModel* model = TfLiteModelCreateFromFile(model_path);
     TfLiteInterpreterOptions* options = TfLiteInterpreterOptionsCreate();
-    TfLiteInterpreterOptionsSetNumThreads(options, 2);
+    TfLiteInterpreterOptionsSetNumThreads(options, total_threads);
 
     // Create the interpreter.
     TfLiteInterpreter* interpreter = TfLiteInterpreterCreate(model, options);
-
-    // Allocate tensors and populate the input tensor data.
     TfLiteInterpreterAllocateTensors(interpreter);
 
-    // print the info before invoking
+    // Show summary of model
     PrintTfLiteModelSummary(interpreter);
 
-    TfLiteTensor* input_tensor = TfLiteInterpreterGetInputTensor(interpreter, 0);
-    size_t input_size = 1; 
-    {
-        for (int i = 0; i < input_tensor->dims->size; i++) {
-            input_size *= input_tensor->dims->data[i];
+    // Allocate and copy input data
+    const int input_tensor_count = TfLiteInterpreterGetInputTensorCount(interpreter);
+    for (int i = 0; i < input_tensor_count; i++) {
+        TfLiteTensor* tensor = TfLiteInterpreterGetInputTensor(interpreter, i);
+        size_t total_elements = 1;
+        for (int j = 0; j < tensor->dims->size; j++) {
+            total_elements *= tensor->dims->data[j];
         }
+        const TfLiteType tensor_type = TfLiteTensorType(tensor);
+        const size_t type_size = TfLiteTypeSizeTable[tensor_type];
+        const size_t total_bytes = total_elements*type_size;
+        uint8_t* buf = (uint8_t*)malloc(total_bytes);
+        TfLiteTensorCopyFromBuffer(tensor, (void*)buf, total_bytes);
+        free(buf);
     }
-    float *input = (float *)malloc(sizeof(float) * input_size);
-    TfLiteTensorCopyFromBuffer(input_tensor, input, input_size * sizeof(float));
+    printf("Copied data into input tensors\n");
 
-    // Execute inference.
+    // Forward pass
     TfLiteInterpreterInvoke(interpreter);
+    printf("Successfully invoked interpreter for forward pass\n");
 
-    // Extract the output tensor data.
-    const TfLiteTensor* output_tensor = TfLiteInterpreterGetOutputTensor(interpreter, 0);
-    size_t output_size = 1; 
-    {
-        for (int i = 0; i < output_tensor->dims->size; i++) {
-            output_size *= output_tensor->dims->data[i];
+    // Allocate and copy output data
+    const int output_tensor_count = TfLiteInterpreterGetOutputTensorCount(interpreter);
+    for (int i = 0; i < output_tensor_count; i++) {
+        const TfLiteTensor* tensor = TfLiteInterpreterGetOutputTensor(interpreter, i);
+        size_t total_elements = 1;
+        for (int j = 0; j < tensor->dims->size; j++) {
+            total_elements *= tensor->dims->data[j];
         }
+        const TfLiteType tensor_type = TfLiteTensorType(tensor);
+        const size_t type_size = TfLiteTypeSizeTable[tensor_type];
+        const size_t total_bytes = total_elements*type_size;
+        uint8_t* buf = (uint8_t*)malloc(total_bytes);
+        TfLiteTensorCopyToBuffer(tensor, buf, total_bytes);
+        free(buf);
     }
-    float *output = (float *)malloc(sizeof(float) * output_size);
-
-    TfLiteTensorCopyToBuffer(output_tensor, output, output_size * sizeof(float));
+    printf("Copied data from output tensors\n");
 
     // Dispose of the model and interpreter objects.
     TfLiteInterpreterDelete(interpreter);
     TfLiteInterpreterOptionsDelete(options);
     TfLiteModelDelete(model);
-    // free input/output buffers
-    free(input);
-    free(output);
-
-    printf("Successfully invoked model\n");
-
-    int a = 10;
-    int *c = &a;
-    c[1] = 2;
-    printf("Value of c=%d\n", a);
+    printf("Freed model data\n");
 
     return 0;
 }
 
 
-void PrintTfLiteModelSummary(TfLiteInterpreter *interpreter) {
+void PrintTfLiteModelSummary(TfLiteInterpreter* interpreter) {
     int input_tensor_count = TfLiteInterpreterGetInputTensorCount(interpreter);
     int output_tensor_count = TfLiteInterpreterGetOutputTensorCount(interpreter);
     printf("inputs=%d, output=%d\n", input_tensor_count, output_tensor_count);
@@ -88,7 +112,7 @@ void PrintTfLiteModelSummary(TfLiteInterpreter *interpreter) {
     }
 }
 
-void PrintTfLiteTensorSummary(const TfLiteTensor *tensor) {
+void PrintTfLiteTensorSummary(const TfLiteTensor* tensor) {
     printf("%s (", tensor->name);
     // size of tensor
     for (int j = 0; j < tensor->dims->size; j++) {
