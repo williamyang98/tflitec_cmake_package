@@ -18,14 +18,14 @@ add_library(tflitec SHARED IMPORTED GLOBAL)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set_target_properties(tflitec PROPERTIES 
         INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-        IMPORTED_IMPLIB_RELEASE     "${_IMPORT_PREFIX}/lib/x64/Release/tensorflowlite_c.lib"
-        IMPORTED_LOCATION_RELEASE   "${_IMPORT_PREFIX}/bin/x64/Release/tensorflowlite_c.dll")
+        IMPORTED_IMPLIB             "${_IMPORT_PREFIX}/lib/x64/Release/tensorflowlite_c.lib"
+        IMPORTED_LOCATION           "${_IMPORT_PREFIX}/bin/x64/Release/tensorflowlite_c.dll")
     message(STATUS "Using x64 build of tflitec")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
     set_target_properties(tflitec PROPERTIES 
         INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-        IMPORTED_IMPLIB_RELEASE     "${_IMPORT_PREFIX}/lib/x86/Release/tensorflowlite_c.lib"
-        IMPORTED_LOCATION_RELEASE   "${_IMPORT_PREFIX}/bin/x86/Release/tensorflowlite_c.dll")
+        IMPORTED_IMPLIB             "${_IMPORT_PREFIX}/lib/x86/Release/tensorflowlite_c.lib"
+        IMPORTED_LOCATION           "${_IMPORT_PREFIX}/bin/x86/Release/tensorflowlite_c.dll")
     message(STATUS "Using x86 build of tflitec")
 endif()
 
