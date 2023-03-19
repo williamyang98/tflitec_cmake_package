@@ -29,8 +29,6 @@ elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
     message(STATUS "Using x86 build of tflitec")
 endif()
 
-set_property(TARGET tflitec APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-
 # corresponding pop on policy scope
 set(CMAKE_IMPORT_FILE_VERSION)
 cmake_policy(POP)
