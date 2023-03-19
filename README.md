@@ -1,4 +1,6 @@
 # Introduction
+![windows-build](https://github.com/FiendChain/tflitec_cmake_package/actions/workflows/windows.yml/badge.svg)
+
 This is a config.cmake for the lightweight tensorflowlite_c api. 
 
 Build targets are:
